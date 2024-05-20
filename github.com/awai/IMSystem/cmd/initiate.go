@@ -13,7 +13,7 @@ func init() {
 
 var rootCmd = &cobra.Command{
 	Use:   "ImSystem",
-	Short: "聊天系统",
+	Short: "这是一个IM系统",
 	Run:   ImSystem,
 }
 
