@@ -1,3 +1,8 @@
+/*
+ * @Author: cyy
+ * @Descripttion: 对于连接部分的封装
+ */
+
 package sdk
 
 type connect struct {
@@ -15,7 +20,7 @@ func newConnet(serverAddr string) *connect {
 
 /**
 * 获取一个reveChan的对象
-*/
+ */
 func (c *connect) recv() <-chan *Message {
 	return c.recvChan
 }

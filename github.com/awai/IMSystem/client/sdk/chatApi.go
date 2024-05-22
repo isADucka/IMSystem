@@ -1,12 +1,12 @@
 /*
- * @Author: cyy 2867025942@qq.com
- * @Date: 2024-05-21 11:39:26
- * @LastEditors: cyy 2867025942@qq.com
- * @LastEditTime: 2024-05-21 21:23:06
- * @FilePath: /IMSystem/client/sdk/chatApi.go
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @Author: cyy
+ * @Descripttion: 封装消息部分
  */
 package sdk
+
+const(
+	MsgType="text"
+)
 
 /*
 * 对消息的封装
@@ -43,7 +43,7 @@ func NewChat(serverAddr, nick, userId, sessionId string) *Chat {
 	}
 }
 
-func (chat *Chat) sendMessage(msg *Message) {
+func (chat *Chat) SendMessage(msg *Message) {
 	//通过chat的连接调用发送消息
 	chat.conn.send(msg)
 }
