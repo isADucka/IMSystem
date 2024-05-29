@@ -6,46 +6,45 @@ package client
 
 import (
 	"fmt"
-	"log"
-	"math/rand"
-	"time"
-	"io/ioutil"
 	"github.com/awai/IMSystem/client/sdk"
 	"github.com/gookit/color"
 	"github.com/rocket049/gocui"
+	"io/ioutil"
+	"log"
+	"math/rand"
+	"time"
 )
 
-func init(){
+func init() {
 	rand.Seed(time.Now().UnixNano())
 
 }
 
 var (
-	buf string   // 写入文件的数据
-	chat *sdk.Chat   //Chat对象
-	pos int  //与事件有关，用来辅助查找输入框的上下条数据
+	buf  string    // 写入文件的数据
+	chat *sdk.Chat //Chat对象
+	pos  int       //与事件有关，用来辅助查找输入框的上下条数据
 )
 
 /**
 * 用来封装输出的消息
 * septum是句末隔离标识
-*/
-type VoMsg struct{
-	Name,Content,Septum string
+ */
+type VoMsg struct {
+	Name, Content, Septum string
 }
 
 /**
 * 处理输入框的消息进行展示
-*/
-func (voMsg VoMsg) Show(cui *gocui.Gui) error{
-	view,err:=cui.View("out")
-	if err!=nil{
+ */
+func (voMsg VoMsg) Show(cui *gocui.Gui) error {
+	view, err := cui.View("out")
+	if err != nil {
 		return nil
 	}
-	fmt.Fprintf(view, "%v:%v%v\n", color.FgGreen.Text(voMsg.Name), voMsg.Septum,color.FgYellow.Text(voMsg.Content))
+	fmt.Fprintf(view, "%v:%v%v\n", color.FgGreen.Text(voMsg.Name), voMsg.Septum, color.FgYellow.Text(voMsg.Content))
 	return nil
 }
-
 
 /**
 * cmd/client.go调用的
@@ -70,7 +69,7 @@ func RunMain() {
 	if err := cui.SetKeybinding("main", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
-	if err := cui.SetKeybinding("main",gocui.KeyEnter, gocui.ModNone, viewUpdate); err != nil {
+	if err := cui.SetKeybinding("main", gocui.KeyEnter, gocui.ModNone, viewUpdate); err != nil {
 		log.Panicln(err)
 	}
 	if err := cui.SetKeybinding("main", gocui.KeyPgup, gocui.ModNone, viewUpScroll); err != nil {
@@ -90,25 +89,25 @@ func RunMain() {
 	// }
 
 	go RecvMsg(cui)
-	if err:=cui.MainLoop();err!=nil{
+	if err := cui.MainLoop(); err != nil {
 		log.Println(err)
 	}
-	
+
 	ioutil.WriteFile("chat.log", []byte(buf), 0644)
 }
 
 /**
 * 用gorountine接收消息
-*/
-func RecvMsg(cui *gocui.Gui){
-	channel:=chat.Recv()
-	for msg:=range channel{
+ */
+func RecvMsg(cui *gocui.Gui) {
+	channel := chat.Recv()
+	for msg := range channel {
 		// if msg.Type==sdk.MsgType {
 		// 	viewPrint(cui,msg.Name,msg.Content,false)
 		// }
-		switch msg.Type{
+		switch msg.Type {
 		case sdk.MsgType:
-			viewPrint(cui,msg.Name,msg.Content,false);
+			viewPrint(cui, msg.Name, msg.Content, false)
 		}
 	}
 	cui.Close()
@@ -117,29 +116,29 @@ func RecvMsg(cui *gocui.Gui){
 /**
 * 输出消息，更新到控制页面
 * flag是来控制是否换行
-*/
-func viewPrint(cui *gocui.Gui,name,content string,flag bool)  {
+ */
+func viewPrint(cui *gocui.Gui, name, content string, flag bool) {
 	var out VoMsg
 	if flag {
-		out.Septum="\n"
-	}else{
-		out.Septum=" "
+		out.Septum = "\n"
+	} else {
+		out.Septum = " "
 	}
-	out.Name=name
-	out.Content=content
+	out.Name = name
+	out.Content = content
 	cui.Update(out.Show)
 }
 
 // 整体布局
 func layout(g *gocui.Gui) error {
-	maxX,maxY := g.Size()
+	maxX, maxY := g.Size()
 	if err := headLayout(g, 1, 1, maxX-1, 3); err != nil {
 		return err
 	}
-	if err:=outLayout(g,1,4,maxX-1,maxY-4);err!=nil{
+	if err := outLayout(g, 1, 4, maxX-1, maxY-4); err != nil {
 		return err
 	}
-	if err:=mainLayout(g,1, maxY-3,maxX-1,maxY-1);err!=nil{
+	if err := mainLayout(g, 1, maxY-3, maxX-1, maxY-1); err != nil {
 		return err
 	}
 	return nil
@@ -159,40 +158,40 @@ func headLayout(cui *gocui.Gui, x0, y0, x1, y1 int) error {
 	return nil
 }
 
-//局部布局--main布局
-func mainLayout(cui *gocui.Gui,x0,y0,x1,y1 int) error{
-	if view,err:=cui.SetView("main",x0,y0,x1,y1);err!=nil{
-		if err!=gocui.ErrUnknownView{
+// 局部布局--main布局
+func mainLayout(cui *gocui.Gui, x0, y0, x1, y1 int) error {
+	if view, err := cui.SetView("main", x0, y0, x1, y1); err != nil {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
-		view.Editable=true
-		view.Wrap=true
-		view.Overwrite=false
-		if _,err:=cui.SetCurrentView("main");err!=nil{
+		view.Editable = true
+		view.Wrap = true
+		view.Overwrite = false
+		if _, err := cui.SetCurrentView("main"); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-//局部布局--out布局
-func outLayout(cui *gocui.Gui,x0,y0,x1,y1 int) error{
-	if view,err:=cui.SetView("out",x0,y0,x1,y1);err!=nil{
-		if err!=gocui.ErrUnknownView{
+// 局部布局--out布局
+func outLayout(cui *gocui.Gui, x0, y0, x1, y1 int) error {
+	if view, err := cui.SetView("out", x0, y0, x1, y1); err != nil {
+		if err != gocui.ErrUnknownView {
 			return err
 		}
-		view.Wrap=true
-		view.Overwrite=false
-		view.Autoscroll=true
-		view.SelBgColor=gocui.ColorRed
-		view.Title="Message"
+		view.Wrap = true
+		view.Overwrite = false
+		view.Autoscroll = true
+		view.SelBgColor = gocui.ColorRed
+		view.Title = "Message"
 	}
 	return nil
 }
 
 /**
 * 将聊天界面的头部填充内容
-*/
+ */
 func setHeadText(g *gocui.Gui, msg string) {
 	view, err := g.View("head")
 	if err == nil {
@@ -204,11 +203,11 @@ func setHeadText(g *gocui.Gui, msg string) {
 /**
 * 绑定退出事件，
 * 需要完成：①获取消息对象准备持久化 ②关闭连接
-*/
-func quit(cui *gocui.Gui,cv *gocui.View)error{
+ */
+func quit(cui *gocui.Gui, cv *gocui.View) error {
 	chat.Close()
-	ov,_:=cui.View("out")
-	buf=ov.Buffer()
+	ov, _ := cui.View("out")
+	buf = ov.Buffer()
 	cui.Close()
 	return gocui.ErrQuit
 
@@ -216,65 +215,64 @@ func quit(cui *gocui.Gui,cv *gocui.View)error{
 
 /**
 * 页面更新
-*/
-func viewUpdate(cui *gocui.Gui,cv *gocui.View) error {
-	showSay(cui,cv)
-	length:=len(cv.Buffer())
-	cv.MoveCursor(0-length,0,true)
+ */
+func viewUpdate(cui *gocui.Gui, cv *gocui.View) error {
+	showSay(cui, cv)
+	length := len(cv.Buffer())
+	cv.MoveCursor(0-length, 0, true)
 	cv.Clear()
 	return nil
 }
 
 /**
 * 用于将输入的聊天展现在页面
-*/
-func showSay(cui *gocui.Gui,cv *gocui.View){
-	view,err:=cui.View("out")
-	if cv!=nil && err==nil {
-		readEd:=cv.ReadEditor()
-		if readEd!=nil{
-			msg:=&sdk.Message{
-				Type: sdk.MsgType,
-				Name: "awai",
+ */
+func showSay(cui *gocui.Gui, cv *gocui.View) {
+	view, err := cui.View("out")
+	if cv != nil && err == nil {
+		readEd := cv.ReadEditor()
+		if readEd != nil {
+			msg := &sdk.Message{
+				Type:       sdk.MsgType,
+				Name:       "awai",
 				FromUserId: "123123123",
-				ToUserId: "456456456",
-				Content: string(readEd),
+				ToUserId:   "456456456",
+				Content:    string(readEd),
 			}
 
-			viewPrint(cui,"me",msg.Content,false)
+			viewPrint(cui, "me", msg.Content, false)
 			chat.SendMessage(msg)
 		}
-		view.Autoscroll=true
+		view.Autoscroll = true
 	}
 }
 
 /**
 * 绑定是消息上下翻页，翻查上一页
-*/
-func viewUpScroll(cui *gocui.Gui,cv *gocui.View)error{
-	view,err:=cui.View("out")
-	view.Autoscroll=false
-	ox,oy:=view.Origin()
-	if err==nil{
-		view.SetOrigin(ox,oy-1)
+ */
+func viewUpScroll(cui *gocui.Gui, cv *gocui.View) error {
+	view, err := cui.View("out")
+	view.Autoscroll = false
+	ox, oy := view.Origin()
+	if err == nil {
+		view.SetOrigin(ox, oy-1)
 	}
 	return nil
 }
 
-
 /**
 * 绑定的是消息上下翻页，翻查下一页
-*/ 
-func viewDownScroll(cui *gocui.Gui,cv *gocui.View)error{
-	view,err:=cui.View("out")
-	_,y:=view.Size()
-	ox,oy:=view.Origin()
-	lnum:=len(view.BufferLines())
-	if err==nil{
-		if oy>lnum-y-1{
-			view.Autoscroll=true
-		}else{
-			view.SetOrigin(ox,oy+1)
+ */
+func viewDownScroll(cui *gocui.Gui, cv *gocui.View) error {
+	view, err := cui.View("out")
+	_, y := view.Size()
+	ox, oy := view.Origin()
+	lnum := len(view.BufferLines())
+	if err == nil {
+		if oy > lnum-y-1 {
+			view.Autoscroll = true
+		} else {
+			view.SetOrigin(ox, oy+1)
 		}
 	}
 	return nil
@@ -282,41 +280,41 @@ func viewDownScroll(cui *gocui.Gui,cv *gocui.View)error{
 
 /*
 * 发送框查找上一条消息
-*/
-func pasteUP(cui *gocui.Gui,cv *gocui.View)error{
-	view,err:=cui.View("out")
-	if err!=nil{
-		fmt.Fprint(cv,err)
+ */
+func pasteUP(cui *gocui.Gui, cv *gocui.View) error {
+	view, err := cui.View("out")
+	if err != nil {
+		fmt.Fprint(cv, err)
 		return nil
 	}
 	//获取到view的所有消息行,用来查找数据的上下行
-	lines:=view.BufferLines()
-	len:=len(lines)
+	lines := view.BufferLines()
+	len := len(lines)
 	//判断是否有查找上一条消息的空间
-	if pos<len-1 {
+	if pos < len-1 {
 		pos++
 	}
 	cv.Clear()
-	fmt.Fprintf(cv,"%s",lines[len-1-pos])
+	fmt.Fprintf(cv, "%s", lines[len-1-pos])
 	return nil
 }
 
 /**
 * 查找发送框的下一条消息，（后续看看能不能和pasteUP合成为一个）
-*/
-func pasteDown(cui *gocui.Gui,cv *gocui.View)error{
-	view,err:=cui.View("out")
-	if err!=nil{
-		fmt.Fprint(cv,err)
+ */
+func pasteDown(cui *gocui.Gui, cv *gocui.View) error {
+	view, err := cui.View("out")
+	if err != nil {
+		fmt.Fprint(cv, err)
 		return nil
 	}
-	lines:=view.BufferLines()
-	len:=len(lines)
+	lines := view.BufferLines()
+	len := len(lines)
 	//判断是否有查找上一条消息的空间
-	if pos>0 {
+	if pos > 0 {
 		pos--
 	}
 	cv.Clear()
-	fmt.Fprintf(cv,"%s",lines[len-1-pos])
+	fmt.Fprintf(cv, "%s", lines[len-1-pos])
 	return nil
 }

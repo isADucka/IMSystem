@@ -1,14 +1,28 @@
+/*
+ * @Author: cyy
+ * @Description: 初始化的cmd
+ */
 package cmd
 
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
+)
+
+var (
+	ConfigPath string
 )
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().StringVar(
+		&ConfigPath,
+		"config",
+		"./imSystem.yaml",
+		"config file(default ./ImSytem.yaml)")
 }
 
 var rootCmd = &cobra.Command{
